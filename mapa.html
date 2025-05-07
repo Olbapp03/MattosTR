@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mapa de Motoristas</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="dashboard">
+      <div class="info-list" id="infoList"></div>
+      <div class="divider"></div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script>
+    const infoList = document.getElementById('infoList');
+    let map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const markers = {};
+
+    database.ref('drivers').on('value', (snapshot) => {
+      const data = snapshot.val();
+      infoList.innerHTML = '';
+
+      // Remove marcadores antigos
+      for (let key in markers) {
+        map.removeLayer(markers[key]);
+      }
+
+      // Adiciona novos
+      for (let id in data) {
+        const driver = data[id];
+
+        const marker = L.marker([driver.lat, driver.lng])
+          .addTo(map)
+          .bindPopup(`<b>${driver.name}</b><br>${driver.vehicle}<br>📞 ${driver.phone}`);
+
+        markers[id] = marker;
+
+        const card = document.createElement('div');
+        card.className = 'driver-card';
+        card.innerHTML = `
+          <p><strong>${driver.name}</strong></p>
+          <p>${driver.vehicle}</p>
+          <p><a href="tel:${driver.phone}">📞 ${driver.phone}</a></p>
+        `;
+        card.addEventListener('click', () => {
+          map.setView([driver.lat, driver.lng], 18);
+          marker.openPopup();
+        });
+        infoList.appendChild(card);
+      }
+    });
+  </script>
+</body>
+</html>

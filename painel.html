@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel de Motoristas</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div class="container">
+    <form id="driver-form">
+      <h1>🚗 Adicionar/Atualizar Motorista</h1>
+      <input type="text" id="driverName" placeholder="Nome do motorista" required />
+      <input type="text" id="vehicleType" placeholder="Tipo de veículo" required />
+      <input type="tel" id="driverPhone" placeholder="Telefone (com DDD)" required />
+      <button type="submit">Enviar Localização</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('driver-form');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('driverName').value.trim();
+      const vehicle = document.getElementById('vehicleType').value.trim();
+      const phone = document.getElementById('driverPhone').value.trim();
+
+      if (!name || !vehicle || !phone) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        alert("Geolocalização não suportada.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+
+        const driverData = {
+          name,
+          vehicle,
+          phone,
+          lat: latitude,
+          lng: longitude,
+          timestamp: Date.now()
+        };
+
+        database.ref('drivers/' + name).set(driverData)
+          .then(() => {
+            alert('Localização enviada com sucesso!');
+            form.reset();
+          })
+          .catch((error) => {
+            console.error('Erro ao enviar localização:', error);
+          });
+      });
+    });
+  </script>
+</body>
+</html>
